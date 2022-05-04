@@ -5,13 +5,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.co.claro.claro.endpoint.sms.dto.RequestDTO;
 import com.co.claro.claro.endpoint.sms.dto.ResponseDTO;
+import com.co.claro.claro.endpoint.sms.service.AppService;
+import com.co.claro.claro.endpoint.sms.util.AESUtil;
 
-import brave.Tracer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -19,8 +21,9 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/api/v1")
 @Api(tags = "SMS")
 public class SMSController {
+
 	@Autowired
-	private Tracer tracer;
+	private AppService service;
 
 	private static final Logger log = LoggerFactory.getLogger(SMSController.class);
 
@@ -30,12 +33,16 @@ public class SMSController {
 
 		log.info("request: {}", request);
 
-		ResponseDTO response = new ResponseDTO();
-		response.setMessage("Operacion Exitosa");
-		response.setTransactionId(tracer.currentSpan().context().traceIdString());
-		response.setResponseCode("200");
+		return service.sendMessage(request);
 
-		return response;
+	}
+
+	@PostMapping("/decript")
+	public String decryptToken(@RequestHeader("token") String token, @RequestHeader("secretKey") String secretKey)
+			throws Exception {
+
+		return AESUtil.decrypt(token, secretKey);
+
 	}
 
 }
